@@ -4,7 +4,6 @@ import GhostCursor from "./GhostCursor.jsx";
 import TechText from "./TechText.jsx";
 import StaggeredMenu from "./StaggeredMenu.jsx";
 import HalftoneReveal from "./HalftoneReveal.tsx";
-import mexicoFlag from "../images/mexico-flag.png?no-inline";
 import { playlistArtwork } from "./music-data.js";
 
 const menuItems = [
@@ -141,7 +140,7 @@ const flagCardMount = document.getElementById("flag-card-mount");
 if (flagCardMount) {
   createRoot(flagCardMount).render(
     <HalftoneReveal
-      src={mexicoFlag}
+      src="/images/mexico-flag.png"
       mode="mono"
       shape="dot"
       cellSize={6}

@@ -4,7 +4,6 @@ import TechText from "./TechText.jsx";
 import StaggeredMenu from "./StaggeredMenu.jsx";
 import HalftoneReveal from "./HalftoneReveal.tsx";
 import mimikyuCard from "../images/mimikyu-card.png?no-inline";
-import mexicoFlag from "../images/mexico-flag.png?no-inline";
 import storyMarkdown from "./content/por-si-algun-dia-lo-olvide.md?raw";
 import { playlistArtwork, playlistUrl } from "./music-data.js";
 
@@ -214,7 +213,7 @@ export default function App() {
               aria-label="Bandera ficticia de México con franjas verde, blanca y roja; en el centro aparecen un águila estilizada, una luna y estrellas"
             >
               <HalftoneReveal
-                src={mexicoFlag}
+                src="/images/mexico-flag.png"
                 mode="mono"
                 shape="dot"
                 cellSize={6}
