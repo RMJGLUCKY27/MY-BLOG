@@ -44,7 +44,7 @@ function colorLuma(color: string) {
 
 const HalftoneReveal = ({
   src,
-  fit = 'cover',
+  fit = 'contain',
   cellSize = 6,
   angle = 45,
   dotScale = 1,
@@ -333,7 +333,7 @@ const HalftoneReveal = ({
 
   return (
     <div ref={containerRef} className={['relative h-full w-full overflow-hidden', className].filter(Boolean).join(' ')} style={style}>
-      <img className="absolute inset-0 block h-full w-full object-cover" src={src} alt="" aria-hidden="true" draggable={false} />
+      <img className={['absolute inset-0 block h-full w-full', fit === 'cover' ? 'object-cover' : 'object-contain'].join(' ')} src={src} alt="" aria-hidden="true" draggable={false} />
       <canvas ref={canvasRef} className="absolute inset-0 block h-full w-full opacity-0 transition-opacity duration-300" aria-hidden="true" />
     </div>
   );
