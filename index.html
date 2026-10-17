@@ -75,8 +75,12 @@
       #file-preview .flag-symbol h3{color:#ddd0ff;font-size:17px;font-weight:600}
       #file-preview .flag-symbol p{margin-top:7px;color:rgba(255,255,255,.68);font-family:Montserrat,Geist,Arial,sans-serif;font-size:14px;line-height:1.8;text-align:justify;text-justify:inter-word;hyphens:auto}
       #file-preview .flag-figure{width:100%;max-width:560px;margin:0 auto}
-      #file-preview .flag-card-mount{width:100%;aspect-ratio:1170/660}
-      #file-preview .flag-card-mount>img{display:block;width:100%;height:100%;border-radius:18px;object-fit:cover;box-shadow:0 24px 70px rgba(0,0,0,.35)}
+      #file-preview .flag-card-mount{position:relative;width:100%;aspect-ratio:1170/660;perspective:900px;transform-style:preserve-3d;transition:filter .35s ease}
+      #file-preview .flag-card-mount>img{display:block;width:100%;height:100%;border-radius:18px;object-fit:cover;box-shadow:0 24px 70px rgba(0,0,0,.35);transform:rotateX(var(--flag-rotate-x,0deg)) rotateY(var(--flag-rotate-y,0deg)) scale(var(--flag-scale,1));transform-origin:center;transition:transform .45s cubic-bezier(.2,.75,.25,1);will-change:transform}
+      #file-preview .flag-card-mount:before{position:absolute;inset:0;z-index:2;border-radius:18px;content:"";background:radial-gradient(circle at var(--flag-glare-x,50%) var(--flag-glare-y,50%),rgba(255,255,255,.3),rgba(215,195,255,.2) 22%,transparent 60%);mix-blend-mode:screen;opacity:var(--flag-glare-opacity,0);pointer-events:none;transition:opacity .25s ease}
+      #file-preview .flag-card-mount:after{position:absolute;inset:0;z-index:3;border-radius:18px;content:"";box-shadow:inset 0 0 0 1px rgba(255,255,255,.13),inset 0 1px 0 rgba(255,255,255,.14);pointer-events:none}
+      #file-preview .flag-card-mount[data-tilting="true"]{filter:drop-shadow(0 24px 30px rgba(0,0,0,.32))}
+      #file-preview .flag-card-mount[data-tilting="true"]>img{transition:transform .08s linear}
       #file-preview .flag-source{margin-top:13px;color:rgba(255,255,255,.42);font-size:10px;letter-spacing:.12em;text-transform:uppercase}
       #file-preview .flag-source a{color:rgba(221,204,255,.75);transition:color .2s ease}
       #file-preview .flag-source a:hover{color:#fff}
@@ -131,5 +135,45 @@
       <footer>Blog</footer>
     </div>
     <script type="module" src="/src/mimikyu-title.jsx"></script>
+    <script>
+      (() => {
+        const card = document.getElementById("flag-card-mount");
+        if (!card) return;
+
+        const fallbackImage = card.querySelector(":scope > img");
+        if (!fallbackImage) return;
+
+        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        const move = event => {
+          if (card.querySelector(":scope > img") !== fallbackImage) return;
+          if (reducedMotion || (event.pointerType === "touch" && event.buttons === 0)) return;
+
+          const bounds = card.getBoundingClientRect();
+          const x = Math.max(0, Math.min(1, (event.clientX - bounds.left) / bounds.width));
+          const y = Math.max(0, Math.min(1, (event.clientY - bounds.top) / bounds.height));
+          card.dataset.tilting = "true";
+          card.style.setProperty("--flag-rotate-x", `${((0.5 - y) * 20).toFixed(2)}deg`);
+          card.style.setProperty("--flag-rotate-y", `${((x - 0.5) * 24).toFixed(2)}deg`);
+          card.style.setProperty("--flag-scale", "1.04");
+          card.style.setProperty("--flag-glare-x", `${(x * 100).toFixed(1)}%`);
+          card.style.setProperty("--flag-glare-y", `${(y * 100).toFixed(1)}%`);
+          card.style.setProperty("--flag-glare-opacity", reducedMotion ? "0" : "0.8");
+        };
+
+        const reset = () => {
+          delete card.dataset.tilting;
+          card.style.setProperty("--flag-rotate-x", "0deg");
+          card.style.setProperty("--flag-rotate-y", "0deg");
+          card.style.setProperty("--flag-scale", "1");
+          card.style.setProperty("--flag-glare-opacity", "0");
+        };
+
+        card.addEventListener("pointermove", move, { passive: true });
+        card.addEventListener("pointerleave", reset, { passive: true });
+        window.addEventListener("pointerup", event => {
+          if (event.pointerType === "touch") reset();
+        }, { passive: true });
+      })();
+    </script>
   </body>
 </html>
