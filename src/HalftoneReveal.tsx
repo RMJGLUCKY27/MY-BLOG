@@ -26,7 +26,6 @@ export interface HalftoneRevealProps {
 }
 
 const clamp = (value: number, min: number, max: number) => Math.min(max, Math.max(min, value));
-const smoothstep = (value: number) => value * value * (3 - 2 * value);
 const lumaCache = new Map<string, number>();
 
 function colorLuma(color: string) {
@@ -81,13 +80,12 @@ const HalftoneReveal = ({
     image.decoding = 'async';
     image.crossOrigin = 'anonymous';
 
-    const pointer = { x: 0, y: 0, targetX: 0, targetY: 0, inside: false, lastActive: 0, burstAt: 0 };
+    const pointer = { x: 0, y: 0, targetX: 0, targetY: 0, inside: false, lastActive: 0, enteredAt: 0, burstAt: 0 };
     let sampleData: Uint8ClampedArray | null = null;
     let width = 0;
     let height = 0;
     let dpr = 1;
     let imageRect = { x: 0, y: 0, width: 0, height: 0 };
-    let loadedAt = 0;
     let printCacheKey = '';
     let raf = 0;
     let alive = true;
@@ -142,7 +140,13 @@ const HalftoneReveal = ({
       canvas.style.opacity = '1';
     };
 
-    const drawHalftone = (now: number) => {
+    const drawHalftone = (now: number, presence: number, revealX: number, revealY: number, revealSize: number) => {
+      if (presence <= 0) {
+        context?.setTransform(1, 0, 0, 1, 0, 0);
+        context?.clearRect(0, 0, canvas.width, canvas.height);
+        if (canvas) canvas.style.opacity = '1';
+        return;
+      }
       if (!sampleData || !image.naturalWidth || !context) {
         drawImageFallback();
         return;
@@ -159,81 +163,65 @@ const HalftoneReveal = ({
       const inkLuma = colorLuma(settings.inkColor);
       const span = inkLuma - paperLuma;
       const introProgress = settings.intro && !window.matchMedia('(prefers-reduced-motion: reduce)').matches
-        ? clamp((now - loadedAt) / 1500, 0, 1)
+        ? clamp((now - pointer.enteredAt) / 420, 0, 1)
         : 1;
       const extent = Math.hypot(width, height) / 2 + cell;
       const cacheKey = [canvas.width, canvas.height, cell, settings.angle, settings.dotScale, settings.inkColor, settings.paperColor, settings.contrast, settings.brightness, settings.invert, settings.roughness].join(':');
 
-      if (introProgress >= 1 && printCacheKey === cacheKey) {
-        context.setTransform(1, 0, 0, 1, 0, 0);
-        context.clearRect(0, 0, canvas.width, canvas.height);
-        context.drawImage(printCanvas, 0, 0);
-        return;
-      }
+      if (printCacheKey !== cacheKey) {
+        if (!printContext) return;
+        printContext.setTransform(dpr, 0, 0, dpr, 0, 0);
+        printContext.clearRect(0, 0, width, height);
+        printContext.save();
+        printContext.translate(width / 2, height / 2);
+        printContext.rotate(radians);
+        printContext.fillStyle = settings.paperColor;
 
-      const targetContext = introProgress >= 1 ? printContext : context;
-      if (!targetContext) return;
-      targetContext.setTransform(dpr, 0, 0, dpr, 0, 0);
-      targetContext.clearRect(0, 0, width, height);
-      targetContext.save();
-      targetContext.translate(width / 2, height / 2);
-      targetContext.rotate(radians);
-      targetContext.fillStyle = settings.paperColor;
+        for (let v = -extent; v < extent; v += cell) {
+          for (let u = -extent; u < extent; u += cell) {
+            const localX = u + cell / 2;
+            const localY = v + cell / 2;
+            const x = width / 2 + localX * cosine - localY * sine;
+            const y = height / 2 + localX * sine + localY * cosine;
+            const sampleX = Math.round(x * dpr);
+            const sampleY = Math.round(y * dpr);
+            if (sampleX < 0 || sampleY < 0 || sampleX >= pixelWidth || sampleY >= pixelHeight) continue;
 
-      for (let v = -extent; v < extent; v += cell) {
-        for (let u = -extent; u < extent; u += cell) {
-          const localX = u + cell / 2;
-          const localY = v + cell / 2;
-          const x = width / 2 + localX * cosine - localY * sine;
-          const y = height / 2 + localX * sine + localY * cosine;
-          const sampleX = Math.round(x * dpr);
-          const sampleY = Math.round(y * dpr);
-          if (sampleX < 0 || sampleY < 0 || sampleX >= pixelWidth || sampleY >= pixelHeight) continue;
+            const pixel = (sampleY * pixelWidth + sampleX) * 4;
+            if (sampleData[pixel + 3] < 8) continue;
+            const luma = (sampleData[pixel] * 0.2126 + sampleData[pixel + 1] * 0.7152 + sampleData[pixel + 2] * 0.0722) / 255;
+            let coverage = Math.abs(span) < 0.02 ? 1 - luma : (luma - paperLuma) / span;
+            coverage = clamp((coverage - 0.5) * settings.contrast + 0.5 + settings.brightness, 0, 1);
+            if (settings.invert) coverage = 1 - coverage;
 
-          const pixel = (sampleY * pixelWidth + sampleX) * 4;
-          if (sampleData[pixel + 3] < 8) continue;
-          const luma = (sampleData[pixel] * 0.2126 + sampleData[pixel + 1] * 0.7152 + sampleData[pixel + 2] * 0.0722) / 255;
-          let coverage = Math.abs(span) < 0.02 ? 1 - luma : (luma - paperLuma) / span;
-          coverage = clamp((coverage - 0.5) * settings.contrast + 0.5 + settings.brightness, 0, 1);
-          if (settings.invert) coverage = 1 - coverage;
-
-          const seed = Math.sin(sampleX * 12.9898 + sampleY * 78.233) * 43758.5453;
-          const variation = 1 + (seed - Math.floor(seed) - 0.5) * settings.roughness * 0.22;
-          let radius = Math.min(cell * 0.42, Math.sqrt(coverage) * cell * 0.32 * settings.dotScale * variation);
-          const distance = Math.hypot((x - width / 2) / Math.max(width, height), (y - height / 2) / Math.max(width, height));
-          const delay = distance * 2.3 + ((seed - Math.floor(seed)) * 0.08);
-          const grow = smoothstep(clamp((introProgress * 1.65 - delay) / 0.45, 0, 1));
-          radius *= grow;
-          if (radius < 0.2) continue;
-          targetContext.globalAlpha = (0.06 + coverage * 0.12) * grow;
-          targetContext.beginPath();
-          targetContext.arc(localX, localY, radius, 0, Math.PI * 2);
-          targetContext.fill();
+            const seed = Math.sin(sampleX * 12.9898 + sampleY * 78.233) * 43758.5453;
+            const variation = 1 + (seed - Math.floor(seed) - 0.5) * settings.roughness * 0.22;
+            const radius = Math.min(cell * 0.42, Math.sqrt(coverage) * cell * 0.32 * settings.dotScale * variation);
+            if (radius < 0.2) continue;
+            printContext.globalAlpha = 0.12 + coverage * 0.2;
+            printContext.beginPath();
+            printContext.arc(localX, localY, radius, 0, Math.PI * 2);
+            printContext.fill();
+          }
         }
-      }
-      targetContext.restore();
-      if (introProgress >= 1) {
+        printContext.restore();
         printCacheKey = cacheKey;
-        context.setTransform(1, 0, 0, 1, 0, 0);
-        context.drawImage(printCanvas, 0, 0);
       }
-      canvas.style.opacity = '1';
-    };
 
-    const drawReveal = (presence: number, revealX: number, revealY: number, revealSize: number) => {
-      if (!context || presence <= 0) return;
-      const radius = Math.max(1, revealSize * dpr);
+      context.setTransform(1, 0, 0, 1, 0, 0);
+      context.clearRect(0, 0, canvas.width, canvas.height);
+      context.drawImage(printCanvas, 0, 0);
+      const radius = Math.max(1, revealSize * dpr * introProgress);
       const gradient = context.createRadialGradient(revealX * dpr, revealY * dpr, 0, revealX * dpr, revealY * dpr, radius);
-      const alpha = settingsRef.current.reverse ? 1 - presence : presence;
+      const alpha = settings.reverse ? 1 - presence : presence;
       gradient.addColorStop(0, `rgba(255,255,255,${alpha})`);
       gradient.addColorStop(0.78, `rgba(255,255,255,${alpha})`);
       gradient.addColorStop(1, 'rgba(255,255,255,0)');
-      context.save();
-      context.setTransform(1, 0, 0, 1, 0, 0);
-      context.globalCompositeOperation = 'destination-out';
+      context.globalCompositeOperation = 'destination-in';
       context.fillStyle = gradient;
       context.fillRect(0, 0, canvas.width, canvas.height);
-      context.restore();
+      context.globalCompositeOperation = 'source-over';
+      canvas.style.opacity = '1';
     };
 
     const render = (now: number) => {
@@ -258,11 +246,9 @@ const HalftoneReveal = ({
         if (burstProgress >= 1) pointer.burstAt = 0;
       }
 
-      drawHalftone(now);
-      drawReveal(presence, pointer.x, pointer.y, revealSize);
+      drawHalftone(now, presence, pointer.x, pointer.y, revealSize);
 
-      const introRunning = settings.intro && now - loadedAt < 1500 && !window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-      if (pointer.inside || presence > 0.01 || pointer.burstAt || introRunning) raf = requestAnimationFrame(render);
+      if (pointer.inside || presence > 0.01 || pointer.burstAt) raf = requestAnimationFrame(render);
       else lastFrame = 0;
     };
 
@@ -272,6 +258,7 @@ const HalftoneReveal = ({
 
     const onPointerMove = (event: PointerEvent) => {
       const bounds = container.getBoundingClientRect();
+      if (!pointer.inside) pointer.enteredAt = performance.now();
       pointer.targetX = event.clientX - bounds.left;
       pointer.targetY = event.clientY - bounds.top;
       pointer.inside = true;
@@ -293,7 +280,6 @@ const HalftoneReveal = ({
       wake();
     };
     const onImageLoad = () => {
-      loadedAt = performance.now();
       updateDimensions();
       wake();
     };
