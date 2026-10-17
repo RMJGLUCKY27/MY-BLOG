@@ -69,16 +69,14 @@ const HalftoneReveal = ({
   useEffect(() => {
     const container = containerRef.current;
     const canvas = canvasRef.current;
-    const context = canvas?.getContext('2d', { alpha: false });
+    const context = canvas?.getContext('2d', { alpha: true });
     if (!container || !canvas || !context) return undefined;
     canvas.style.opacity = '0';
 
     const sampleCanvas = document.createElement('canvas');
     const sampleContext = sampleCanvas.getContext('2d', { willReadFrequently: true });
     const printCanvas = document.createElement('canvas');
-    const printContext = printCanvas.getContext('2d', { alpha: false });
-    const revealCanvas = document.createElement('canvas');
-    const revealContext = revealCanvas.getContext('2d');
+    const printContext = printCanvas.getContext('2d', { alpha: true });
     const image = new Image();
     image.decoding = 'async';
     image.crossOrigin = 'anonymous';
@@ -110,8 +108,6 @@ const HalftoneReveal = ({
       sampleCanvas.height = pixelHeight;
       printCanvas.width = pixelWidth;
       printCanvas.height = pixelHeight;
-      revealCanvas.width = pixelWidth;
-      revealCanvas.height = pixelHeight;
       printCacheKey = '';
 
       if (image.naturalWidth > 0 && sampleContext) {
@@ -141,10 +137,8 @@ const HalftoneReveal = ({
 
     const drawImageFallback = () => {
       if (!context || !image.naturalWidth) return;
-      context.setTransform(dpr, 0, 0, dpr, 0, 0);
-      context.fillStyle = settingsRef.current.paperColor;
-      context.fillRect(0, 0, width, height);
-      context.drawImage(image, imageRect.x, imageRect.y, imageRect.width, imageRect.height);
+      context.setTransform(1, 0, 0, 1, 0, 0);
+      context.clearRect(0, 0, canvas.width, canvas.height);
       canvas.style.opacity = '1';
     };
 
@@ -172,6 +166,7 @@ const HalftoneReveal = ({
 
       if (introProgress >= 1 && printCacheKey === cacheKey) {
         context.setTransform(1, 0, 0, 1, 0, 0);
+        context.clearRect(0, 0, canvas.width, canvas.height);
         context.drawImage(printCanvas, 0, 0);
         return;
       }
@@ -179,12 +174,11 @@ const HalftoneReveal = ({
       const targetContext = introProgress >= 1 ? printContext : context;
       if (!targetContext) return;
       targetContext.setTransform(dpr, 0, 0, dpr, 0, 0);
-      targetContext.fillStyle = settings.paperColor;
-      targetContext.fillRect(0, 0, width, height);
+      targetContext.clearRect(0, 0, width, height);
       targetContext.save();
       targetContext.translate(width / 2, height / 2);
       targetContext.rotate(radians);
-      targetContext.fillStyle = settings.inkColor;
+      targetContext.fillStyle = settings.paperColor;
 
       for (let v = -extent; v < extent; v += cell) {
         for (let u = -extent; u < extent; u += cell) {
@@ -205,12 +199,13 @@ const HalftoneReveal = ({
 
           const seed = Math.sin(sampleX * 12.9898 + sampleY * 78.233) * 43758.5453;
           const variation = 1 + (seed - Math.floor(seed) - 0.5) * settings.roughness * 0.22;
-          let radius = Math.min(cell * 0.48, Math.sqrt(coverage) * cell * 0.48 * settings.dotScale * variation);
+          let radius = Math.min(cell * 0.42, Math.sqrt(coverage) * cell * 0.32 * settings.dotScale * variation);
           const distance = Math.hypot((x - width / 2) / Math.max(width, height), (y - height / 2) / Math.max(width, height));
           const delay = distance * 2.3 + ((seed - Math.floor(seed)) * 0.08);
           const grow = smoothstep(clamp((introProgress * 1.65 - delay) / 0.45, 0, 1));
           radius *= grow;
           if (radius < 0.2) continue;
+          targetContext.globalAlpha = (0.06 + coverage * 0.12) * grow;
           targetContext.beginPath();
           targetContext.arc(localX, localY, radius, 0, Math.PI * 2);
           targetContext.fill();
@@ -226,22 +221,19 @@ const HalftoneReveal = ({
     };
 
     const drawReveal = (presence: number, revealX: number, revealY: number, revealSize: number) => {
-      if (!revealContext || !image.naturalWidth || presence <= 0) return;
-      revealContext.setTransform(1, 0, 0, 1, 0, 0);
-      revealContext.clearRect(0, 0, revealCanvas.width, revealCanvas.height);
-      revealContext.drawImage(image, imageRect.x * dpr, imageRect.y * dpr, imageRect.width * dpr, imageRect.height * dpr);
-      revealContext.globalCompositeOperation = 'destination-in';
+      if (!context || presence <= 0) return;
       const radius = Math.max(1, revealSize * dpr);
-      const gradient = revealContext.createRadialGradient(revealX * dpr, revealY * dpr, 0, revealX * dpr, revealY * dpr, radius);
+      const gradient = context.createRadialGradient(revealX * dpr, revealY * dpr, 0, revealX * dpr, revealY * dpr, radius);
       const alpha = settingsRef.current.reverse ? 1 - presence : presence;
       gradient.addColorStop(0, `rgba(255,255,255,${alpha})`);
       gradient.addColorStop(0.78, `rgba(255,255,255,${alpha})`);
       gradient.addColorStop(1, 'rgba(255,255,255,0)');
-      revealContext.fillStyle = gradient;
-      revealContext.fillRect(0, 0, revealCanvas.width, revealCanvas.height);
-      revealContext.globalCompositeOperation = 'source-over';
+      context.save();
       context.setTransform(1, 0, 0, 1, 0, 0);
-      context.drawImage(revealCanvas, 0, 0);
+      context.globalCompositeOperation = 'destination-out';
+      context.fillStyle = gradient;
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.restore();
     };
 
     const render = (now: number) => {
@@ -332,9 +324,25 @@ const HalftoneReveal = ({
   }, [src]);
 
   return (
-    <div ref={containerRef} className={['relative h-full w-full overflow-hidden', className].filter(Boolean).join(' ')} style={style}>
-      <img className={['absolute inset-0 block h-full w-full', fit === 'cover' ? 'object-cover' : 'object-contain'].join(' ')} src={src} alt="" aria-hidden="true" draggable={false} />
-      <canvas ref={canvasRef} className="absolute inset-0 block h-full w-full opacity-0 transition-opacity duration-300" aria-hidden="true" />
+    <div
+      ref={containerRef}
+      className={['relative h-full w-full overflow-hidden', className].filter(Boolean).join(' ')}
+      style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden', ...style }}
+    >
+      <img
+        className={['absolute inset-0 block h-full w-full', fit === 'cover' ? 'object-cover' : 'object-contain'].join(' ')}
+        src={src}
+        alt=""
+        aria-hidden="true"
+        draggable={false}
+        style={{ position: 'absolute', inset: 0, display: 'block', width: '100%', height: '100%', objectFit: fit }}
+      />
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 block h-full w-full opacity-0 transition-opacity duration-300"
+        aria-hidden="true"
+        style={{ position: 'absolute', inset: 0, display: 'block', width: '100%', height: '100%', opacity: 0, pointerEvents: 'none' }}
+      />
     </div>
   );
 };
