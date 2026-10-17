@@ -4,6 +4,7 @@ import GhostCursor from "./GhostCursor.jsx";
 import TechText from "./TechText.jsx";
 import StaggeredMenu from "./StaggeredMenu.jsx";
 import TiltedCard from "./TiltedCard.jsx";
+import mexicoFlag from "../images/mexico-flag.png?no-inline";
 import { playlistArtwork } from "./music-data.js";
 
 const menuItems = [
@@ -125,30 +126,37 @@ const musicCardMount = document.getElementById("music-card-mount");
 
 if (musicCardMount) {
   createRoot(musicCardMount).render(
+    <div className="music-cover">
+      <img src={playlistArtwork} alt="Portada de la playlist We Love Cygnus" />
+      <div className="music-card-overlay" aria-hidden="true">
+        <span>Apple Music · Playlist</span>
+        <h3>We Love Cygnus</h3>
+      </div>
+    </div>
+  );
+}
+
+const flagCardMount = document.getElementById("flag-card-mount");
+
+if (flagCardMount) {
+  createRoot(flagCardMount).render(
     <TiltedCard
-      imageSrc={playlistArtwork}
-      altText="Portada de la playlist We Love Cygnus"
-      showTooltip={false}
+      imageSrc={mexicoFlag}
+      altText="Bandera ficticia de México con franjas verde, blanca y roja; en el centro aparecen un águila estilizada, una luna y estrellas"
+      captionText="La luna y las estrellas"
       containerWidth="100%"
-      containerHeight="clamp(190px, 58vw, 258px)"
+      containerHeight="100%"
       imageWidth="100%"
-      imageHeight="clamp(190px, 58vw, 258px)"
-      rotateAmplitude={8}
-      scaleOnHover={1.035}
-      glare={0.32}
+      imageHeight="100%"
+      rotateAmplitude={12}
+      scaleOnHover={1.04}
+      glare={0.42}
       glareColor="#d7c3ff"
       shadow={0.48}
-      parallax={0.55}
-      smoothness={0.72}
+      parallax={0.6}
+      smoothness={0.7}
       gyroscope={false}
       intro
-      overlayContent={
-        <div className="music-card-overlay" aria-hidden="true">
-          <span>Apple Music · Playlist</span>
-          <h3>We Love Cygnus</h3>
-        </div>
-      }
-      displayOverlayContent
     />
   );
 }

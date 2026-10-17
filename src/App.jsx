@@ -165,31 +165,13 @@ export default function App() {
         </header>
         <div className="grid items-center gap-8 md:grid-cols-[minmax(0,0.95fr)_minmax(320px,1.05fr)] md:gap-12">
           <div className="mx-auto w-full max-w-[460px] md:mx-0">
-            <TiltedCard
-              imageSrc={playlistArtwork}
-              altText="Portada de la playlist We Love Cygnus"
-              showTooltip={false}
-              containerWidth="100%"
-              containerHeight="clamp(190px, 58vw, 258px)"
-              imageWidth="100%"
-              imageHeight="clamp(190px, 58vw, 258px)"
-              rotateAmplitude={8}
-              scaleOnHover={1.035}
-              glare={0.32}
-              glareColor="#d7c3ff"
-              shadow={0.48}
-              parallax={0.55}
-              smoothness={0.72}
-              gyroscope={false}
-              intro
-              overlayContent={
-                <div className="music-card-overlay" aria-hidden="true">
-                  <span>Apple Music · Playlist</span>
-                  <h3>We Love Cygnus</h3>
-                </div>
-              }
-              displayOverlayContent
-            />
+            <div className="music-cover">
+              <img src={playlistArtwork} alt="Portada de la playlist We Love Cygnus" />
+              <div className="music-card-overlay" aria-hidden="true">
+                <span>Apple Music · Playlist</span>
+                <h3>We Love Cygnus</h3>
+              </div>
+            </div>
             <a className="mt-5 inline-flex text-sm font-medium text-violet-200 transition-colors hover:text-white" href={playlistUrl} target="_blank" rel="noopener noreferrer">
               Abrir playlist en Apple Music ↗
             </a>
@@ -225,13 +207,27 @@ export default function App() {
               </div>
             </div>
           </article>
-          <figure>
-            <img
-              className="w-full rounded-[18px] shadow-2xl shadow-black/35"
-              src={mexicoFlag}
-              alt="Bandera ficticia de México con franjas verde, blanca y roja; en el centro aparecen un águila estilizada, una luna y estrellas"
-              loading="lazy"
-            />
+          <figure className="w-full">
+            <div className="aspect-[1170/660] w-full">
+              <TiltedCard
+                imageSrc={mexicoFlag}
+                altText="Bandera ficticia de México con franjas verde, blanca y roja; en el centro aparecen un águila estilizada, una luna y estrellas"
+                captionText="La luna y las estrellas"
+                containerWidth="100%"
+                containerHeight="100%"
+                imageWidth="100%"
+                imageHeight="100%"
+                rotateAmplitude={12}
+                scaleOnHover={1.04}
+                glare={0.42}
+                glareColor="#d7c3ff"
+                shadow={0.48}
+                parallax={0.6}
+                smoothness={0.7}
+                gyroscope={false}
+                intro
+              />
+            </div>
             <figcaption className="mt-3 text-[10px] uppercase tracking-[0.12em] text-white/40">
               Compartido en <a className="text-violet-200/75 transition-colors hover:text-white" href="https://www.reddit.com/r/vexillology/" target="_blank" rel="noopener noreferrer">r/vexillology</a>
             </figcaption>
