@@ -3,7 +3,7 @@ import ASCIIText from "./ASCIIText.jsx";
 import GhostCursor from "./GhostCursor.jsx";
 import TechText from "./TechText.jsx";
 import StaggeredMenu from "./StaggeredMenu.jsx";
-import TiltedCard from "./TiltedCard.jsx";
+import HalftoneReveal from "./HalftoneReveal.tsx";
 import mexicoFlag from "../images/mexico-flag.png?no-inline";
 import { playlistArtwork } from "./music-data.js";
 
@@ -140,23 +140,15 @@ const flagCardMount = document.getElementById("flag-card-mount");
 
 if (flagCardMount) {
   createRoot(flagCardMount).render(
-    <TiltedCard
-      imageSrc={mexicoFlag}
-      altText="Bandera ficticia de México con franjas verde, blanca y roja; en el centro aparecen un águila estilizada, una luna y estrellas"
-      captionText="La luna y las estrellas"
-      containerWidth="100%"
-      containerHeight="100%"
-      imageWidth="100%"
-      imageHeight="100%"
-      rotateAmplitude={12}
-      scaleOnHover={1.04}
-      glare={0.42}
-      glareColor="#d7c3ff"
-      shadow={0.48}
-      parallax={0.6}
-      smoothness={0.7}
-      gyroscope={false}
-      intro
+    <HalftoneReveal
+      src={mexicoFlag}
+      mode="mono"
+      shape="dot"
+      cellSize={6}
+      angle={45}
+      inkColor="#f4f1ea"
+      paperColor="#120f17"
+      revealRadius={160}
     />
   );
 }

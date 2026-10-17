@@ -2,7 +2,7 @@ import HoloCard from "./HoloCard.jsx";
 import GhostCursor from "./GhostCursor.jsx";
 import TechText from "./TechText.jsx";
 import StaggeredMenu from "./StaggeredMenu.jsx";
-import TiltedCard from "./TiltedCard.jsx";
+import HalftoneReveal from "./HalftoneReveal.tsx";
 import mimikyuCard from "../images/mimikyu-card.png?no-inline";
 import mexicoFlag from "../images/mexico-flag.png?no-inline";
 import storyMarkdown from "./content/por-si-algun-dia-lo-olvide.md?raw";
@@ -208,24 +208,20 @@ export default function App() {
             </div>
           </article>
           <figure className="w-full">
-            <div className="aspect-[1170/660] w-full">
-              <TiltedCard
-                imageSrc={mexicoFlag}
-                altText="Bandera ficticia de México con franjas verde, blanca y roja; en el centro aparecen un águila estilizada, una luna y estrellas"
-                captionText="La luna y las estrellas"
-                containerWidth="100%"
-                containerHeight="100%"
-                imageWidth="100%"
-                imageHeight="100%"
-                rotateAmplitude={12}
-                scaleOnHover={1.04}
-                glare={0.42}
-                glareColor="#d7c3ff"
-                shadow={0.48}
-                parallax={0.6}
-                smoothness={0.7}
-                gyroscope={false}
-                intro
+            <div
+              className="aspect-[1170/660] w-full overflow-hidden rounded-[18px] bg-[#120f17]"
+              role="img"
+              aria-label="Bandera ficticia de México con franjas verde, blanca y roja; en el centro aparecen un águila estilizada, una luna y estrellas"
+            >
+              <HalftoneReveal
+                src={mexicoFlag}
+                mode="mono"
+                shape="dot"
+                cellSize={6}
+                angle={45}
+                inkColor="#f4f1ea"
+                paperColor="#120f17"
+                revealRadius={160}
               />
             </div>
             <figcaption className="mt-3 text-[10px] uppercase tracking-[0.12em] text-white/40">
