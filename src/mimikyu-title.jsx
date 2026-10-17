@@ -10,6 +10,7 @@ const menuItems = [
   { label: "Inicio", ariaLabel: "Ir al inicio", link: "#inicio" },
   { label: "Mimikyu", ariaLabel: "Ver la sección de Mimikyu", link: "#mimikyu" },
   { label: "Música", ariaLabel: "Ver la playlist de música", link: "#musica" },
+  { label: "La bandera", ariaLabel: "Ver la bandera ficticia", link: "#bandera" },
   { label: "Por si lo olvido", ariaLabel: "Leer Por si algún día lo olvido", link: "#por-si-lo-olvide" },
   { label: "Pensamientos", ariaLabel: "Ver Pensamientos", link: "#video" },
 ];

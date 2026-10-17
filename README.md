@@ -2,7 +2,7 @@
 
 no quiero olvidar
 
-Plantilla sencilla de blog hecha con React, Vite, Tailwind CSS y Lucide React. Incluye una portada con video de fondo, una carta holográfica de Mimikyu y el artículo «Por si algún día lo olvido».
+Plantilla sencilla de blog hecha con React, Vite, Tailwind CSS y Lucide React. Incluye una portada con video de fondo, una carta holográfica de Mimikyu, una playlist de Apple Music, una bandera ficticia y el artículo «Por si algún día lo olvido».
 
 ## Ejecutar
 
