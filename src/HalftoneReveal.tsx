@@ -71,6 +71,7 @@ const HalftoneReveal = ({
     const canvas = canvasRef.current;
     const context = canvas?.getContext('2d', { alpha: false });
     if (!container || !canvas || !context) return undefined;
+    canvas.style.opacity = '0';
 
     const sampleCanvas = document.createElement('canvas');
     const sampleContext = sampleCanvas.getContext('2d', { willReadFrequently: true });
@@ -144,6 +145,7 @@ const HalftoneReveal = ({
       context.fillStyle = settingsRef.current.paperColor;
       context.fillRect(0, 0, width, height);
       context.drawImage(image, imageRect.x, imageRect.y, imageRect.width, imageRect.height);
+      canvas.style.opacity = '1';
     };
 
     const drawHalftone = (now: number) => {
@@ -220,6 +222,7 @@ const HalftoneReveal = ({
         context.setTransform(1, 0, 0, 1, 0, 0);
         context.drawImage(printCanvas, 0, 0);
       }
+      canvas.style.opacity = '1';
     };
 
     const drawReveal = (presence: number, revealX: number, revealY: number, revealSize: number) => {
@@ -330,7 +333,8 @@ const HalftoneReveal = ({
 
   return (
     <div ref={containerRef} className={['relative h-full w-full overflow-hidden', className].filter(Boolean).join(' ')} style={style}>
-      <canvas ref={canvasRef} className="absolute inset-0 block h-full w-full" aria-hidden="true" />
+      <img className="absolute inset-0 block h-full w-full object-cover" src={src} alt="" aria-hidden="true" draggable={false} />
+      <canvas ref={canvasRef} className="absolute inset-0 block h-full w-full opacity-0 transition-opacity duration-300" aria-hidden="true" />
     </div>
   );
 };
