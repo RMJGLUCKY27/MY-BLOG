@@ -4,6 +4,8 @@ import GhostCursor from "./GhostCursor.jsx";
 import TechText from "./TechText.jsx";
 import StaggeredMenu from "./StaggeredMenu.jsx";
 import HalftoneReveal from "./HalftoneReveal.tsx";
+import RunaroundTextWrap from "./RunaroundTextWrap.jsx";
+import { changePhotos, changesStory } from "./changes-story.js";
 import { playlistArtwork } from "./music-data.js";
 
 const menuItems = [
@@ -13,8 +15,8 @@ const menuItems = [
   { label: "La bandera", ariaLabel: "Ver la bandera ficticia", link: "#bandera" },
   { label: "Por si lo olvido", ariaLabel: "Leer Por si algún día lo olvido", link: "#por-si-lo-olvide" },
   { label: "Pensamientos", ariaLabel: "Ver Pensamientos", link: "#video" },
+  { label: "Cambios pequeños", ariaLabel: "Leer A veces los cambios son más pequeños de lo que imaginamos", link: "#cambios-pequenos" },
 ];
-
 const menuMount = document.getElementById("hero-menu-mount");
 
 if (menuMount) {
@@ -132,6 +134,13 @@ if (musicCardMount) {
         <h3>We Love Cygnus</h3>
       </div>
     </div>
+  );
+}
+
+const changesWrapMount = document.getElementById("changes-wrap-mount");
+if (changesWrapMount) {
+  createRoot(changesWrapMount).render(
+    <RunaroundTextWrap paragraphs={changesStory} images={changePhotos} />
   );
 }
 

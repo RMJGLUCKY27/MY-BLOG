@@ -3,6 +3,8 @@ import GhostCursor from "./GhostCursor.jsx";
 import TechText from "./TechText.jsx";
 import StaggeredMenu from "./StaggeredMenu.jsx";
 import HalftoneReveal from "./HalftoneReveal.tsx";
+import RunaroundTextWrap from "./RunaroundTextWrap.jsx";
+import { changePhotos, changesStory } from "./changes-story.js";
 import mimikyuCard from "../images/mimikyu-card.png?no-inline";
 import storyMarkdown from "./content/por-si-algun-dia-lo-olvide.md?raw";
 import { playlistArtwork, playlistUrl } from "./music-data.js";
@@ -16,8 +18,8 @@ const menuItems = [
   { label: "La bandera", ariaLabel: "Ver la bandera ficticia", link: "#bandera" },
   { label: "Por si lo olvido", ariaLabel: "Leer Por si algún día lo olvido", link: "#por-si-lo-olvide" },
   { label: "Pensamientos", ariaLabel: "Ver Pensamientos", link: "#video" },
+  { label: "Cambios pequeños", ariaLabel: "Leer A veces los cambios son más pequeños de lo que imaginamos", link: "#cambios-pequenos" },
 ];
-
 const [storyHeading, ...storyParagraphs] = storyMarkdown.trim().split(/\n\s*\n/);
 const storyTitle = storyHeading.replace(/^#\s*/, "");
 const storyHighlightPattern = /(\*\*[^*]+\*\*|\b(?:historias|recuerdos|memoria|olvidar|tiempo)\b)/gi;
@@ -275,6 +277,26 @@ export default function App() {
               referrerPolicy="strict-origin-when-cross-origin"
               allowFullScreen
             />
+          </div>
+        </article>
+      </section>
+
+      <section
+        className="px-6 py-16 sm:px-10 sm:py-20 md:px-12 lg:px-16"
+        id="cambios-pequenos"
+      >
+        <article className="mx-auto max-w-6xl">
+          <header className="max-w-3xl">
+            <p className="mb-3 text-[10px] font-semibold uppercase tracking-[0.22em] text-violet-200/70">
+              Diario personal
+            </p>
+            <h2 className="text-4xl font-medium leading-[1.08] tracking-[-0.05em] sm:text-6xl">
+              A veces los cambios son más pequeños de lo que imaginamos
+            </h2>
+          </header>
+
+          <div className="mt-8">
+            <RunaroundTextWrap paragraphs={changesStory} images={changePhotos} />
           </div>
         </article>
       </section>
